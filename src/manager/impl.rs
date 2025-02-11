@@ -49,35 +49,7 @@ where
         self.kill_process(pid)
     }
 
-    /// Title: Start the server in daemon (background) mode on Unix platforms
-    ///
-    /// Parameters:
-    /// - None
-    ///
-    /// Returns:
-    /// - `Result<(), Box<dyn std::error::Error>>`: Operation result.
-    ///
-    /// This function uses the daemonize crate to run the server process in the background. It configures
-    /// the PID file, stdout log, and stderr log paths from the configuration.
-    #[cfg(unix)]
-    pub fn start_daemon(&self) -> Result<(), Box<dyn std::error::Error>> {
-        let stdout_file = fs::File::create(&self.config.stdout_log)?;
-        let stderr_file = fs::File::create(&self.config.stderr_log)?;
-        let daemonize_obj = Daemonize::new()
-            .pid_file(&self.config.pid_file)
-            .chown_pid_file(true)
-            .working_directory(".")
-            .umask(0o027)
-            .stdout(stdout_file)
-            .stderr(stderr_file);
-        daemonize_obj.start()?;
-        let rt = tokio::runtime::Runtime::new()?;
-        rt.block_on(async {
-            (self.server_fn)().await;
-        });
-        Ok(())
-    }
-
+    /// Start the server in daemon (background) mode on Unix platforms.
     /// Title: Start the server in daemon mode on non-Unix platforms
     ///
     /// Parameters:
@@ -87,6 +59,27 @@ where
     /// - `Result<(), Box<dyn std::error::Error>>`: Operation result.
     ///
     /// This function returns an error because daemon mode is not supported on non-Unix platforms.
+    #[cfg(unix)]
+    pub fn start_daemon(&self) -> Result<(), Box<dyn std::error::Error>> {
+        if std::env::var("RUNNING_AS_DAEMON").is_ok() {
+            self.write_pid_file()?;
+            let rt: Runtime = Runtime::new()?;
+            rt.block_on(async {
+                (self.server_fn)().await;
+            });
+            return Ok(());
+        }
+        let exe_path: PathBuf = std::env::current_exe()?;
+        let mut cmd: Command = Command::new(exe_path);
+        cmd.env("RUNNING_AS_DAEMON", "1")
+            .stdout(Stdio::from(fs::File::create(&self.config.stdout_log)?))
+            .stderr(Stdio::from(fs::File::create(&self.config.stderr_log)?))
+            .stdin(Stdio::null());
+        cmd.spawn()?;
+        exit(0);
+    }
+
+    /// 在非 Unix 平台下返回错误。
     #[cfg(not(unix))]
     pub fn start_daemon(&self) -> Result<(), Box<dyn std::error::Error>> {
         Err("Daemon mode is not supported on non-Unix platforms".into())
@@ -100,7 +93,7 @@ where
     /// Returns:
     /// - `Result<i32, Box<dyn std::error::Error>>`: The process ID if successful.
     ///
-    /// This function reads the content of the PID file specified in the configuration and parses it as an integer.
+    /// This function reads the content of the PID file specified in the configuration and parses it as an integer.    
     fn read_pid_file(&self) -> Result<i32, Box<dyn std::error::Error>> {
         let pid_str: String = fs::read_to_string(&self.config.pid_file)?;
         let pid: i32 = pid_str.trim().parse::<i32>()?;
@@ -120,7 +113,7 @@ where
         if let Some(parent) = std::path::Path::new(&self.config.pid_file).parent() {
             fs::create_dir_all(parent)?;
         }
-        let pid: u32 = process::id();
+        let pid: u32 = id();
         fs::write(&self.config.pid_file, pid.to_string())?;
         Ok(())
     }
@@ -136,7 +129,7 @@ where
     /// This function sends a SIGTERM signal to the process with the given PID using libc::kill.
     #[cfg(unix)]
     fn kill_process(&self, pid: i32) -> Result<(), Box<dyn std::error::Error>> {
-        let result = process::Command::new("kill")
+        let result: Result<std::process::Output, std::io::Error> = Command::new("kill")
             .arg("-TERM")
             .arg(pid.to_string())
             .output();
@@ -161,6 +154,7 @@ where
     /// - `Result<(), Box<dyn std::error::Error>>`: Operation result.
     ///
     /// This function returns an error because killing a process is not supported on non-Unix platforms.
+
     #[cfg(not(unix))]
     fn kill_process(&self, _pid: i32) -> Result<(), Box<dyn std::error::Error>> {
         Err("kill_process is not supported on non-Unix platforms".into())
