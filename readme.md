@@ -31,7 +31,7 @@ use std::fs;
 use std::time::Duration;
 let pid_file: String = "test_pid.pid".to_string();
 let _ = fs::remove_file(&pid_file);
-let config: ServerConfigManager = ServerConfigManager {
+let config: ServerManagerConfigConfig = ServerManagerConfigConfig {
     pid_file: pid_file.clone(),
     stdout_log: "test_stdout.log".to_string(),
     stderr_log: "test_stderr.log".to_string(),
