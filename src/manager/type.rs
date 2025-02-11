@@ -10,6 +10,6 @@ use crate::*;
 ///
 /// This structure encapsulates the server management operations and holds the user-provided configuration and the server function.
 pub struct ServerManager<F> {
-    pub(crate) config: ServerConfig,
+    pub(crate) config: ServerConfigManager,
     pub(crate) server_fn: F,
 }

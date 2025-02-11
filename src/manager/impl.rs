@@ -14,7 +14,7 @@ where
     ///
     /// Returns:
     /// - `ServerManager<F>`: A new instance of ServerManager.
-    pub fn new(config: ServerConfig, server_fn: F) -> Self {
+    pub fn new(config: ServerConfigManager, server_fn: F) -> Self {
         Self { config, server_fn }
     }
 

@@ -5,7 +5,7 @@ async fn test_start_executes_server_fn() {
     use std::time::Duration;
     let pid_file: String = "test_pid.pid".to_string();
     let _ = fs::remove_file(&pid_file);
-    let config: ServerConfig = ServerConfig {
+    let config: ServerConfigManager = ServerConfigManager {
         pid_file: pid_file.clone(),
         stdout_log: "test_stdout.log".to_string(),
         stderr_log: "test_stderr.log".to_string(),
