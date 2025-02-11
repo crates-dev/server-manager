@@ -1,6 +1,5 @@
 use crate::*;
 
-
 impl<F, Fut> ServerManager<F>
 where
     F: Fn() -> Fut,
@@ -45,7 +44,7 @@ where
     /// - `Result<(), Box<dyn std::error::Error>>`: Operation result.
     ///
     /// This function reads the process ID from the PID file and attempts to kill the process using a SIGTERM signal.
-    pub fn stop(&self) -> Result<(), Box<dyn Error>> {
+    pub fn stop(&self) -> Result<(), Box<dyn std::error::Error>> {
         let pid: i32 = self.read_pid_file()?;
         self.kill_process(pid)
     }
@@ -61,7 +60,7 @@ where
     /// This function uses the daemonize crate to run the server process in the background. It configures
     /// the PID file, stdout log, and stderr log paths from the configuration.
     #[cfg(unix)]
-    pub fn start_daemon(&self) -> Result<(), Box<dyn Error>> {
+    pub fn start_daemon(&self) -> Result<(), Box<dyn std::error::Error>> {
         let stdout_file = fs::File::create(&self.config.stdout_log)?;
         let stderr_file = fs::File::create(&self.config.stderr_log)?;
         let daemonize_obj = Daemonize::new()
@@ -89,7 +88,7 @@ where
     ///
     /// This function returns an error because daemon mode is not supported on non-Unix platforms.
     #[cfg(not(unix))]
-    pub fn start_daemon(&self) -> Result<(), Box<dyn Error>> {
+    pub fn start_daemon(&self) -> Result<(), Box<dyn std::error::Error>> {
         Err("Daemon mode is not supported on non-Unix platforms".into())
     }
 
@@ -102,7 +101,7 @@ where
     /// - `Result<i32, Box<dyn std::error::Error>>`: The process ID if successful.
     ///
     /// This function reads the content of the PID file specified in the configuration and parses it as an integer.
-    fn read_pid_file(&self) -> Result<i32, Box<dyn Error>> {
+    fn read_pid_file(&self) -> Result<i32, Box<dyn std::error::Error>> {
         let pid_str: String = fs::read_to_string(&self.config.pid_file)?;
         let pid: i32 = pid_str.trim().parse::<i32>()?;
         Ok(pid)
@@ -117,7 +116,10 @@ where
     /// - `Result<(), Box<dyn std::error::Error>>`: Operation result.
     ///
     /// This function obtains the current process ID and writes it as a string to the PID file specified in the configuration.
-    fn write_pid_file(&self) -> Result<(), Box<dyn Error>> {
+    fn write_pid_file(&self) -> Result<(), Box<dyn std::error::Error>> {
+        if let Some(parent) = std::path::Path::new(&self.config.pid_file).parent() {
+            fs::create_dir_all(parent)?;
+        }
         let pid: u32 = process::id();
         fs::write(&self.config.pid_file, pid.to_string())?;
         Ok(())
@@ -133,12 +135,20 @@ where
     ///
     /// This function sends a SIGTERM signal to the process with the given PID using libc::kill.
     #[cfg(unix)]
-    fn kill_process(&self, pid: i32) -> Result<(), Box<dyn Error>> {
-        let result = unsafe { libc::kill(pid as libc::pid_t, libc::SIGTERM) };
-        if result == 0 {
-            Ok(())
-        } else {
-            Err(format!("Failed to kill process with pid: {}", pid).into())
+    fn kill_process(&self, pid: i32) -> Result<(), Box<dyn std::error::Error>> {
+        let result = process::Command::new("kill")
+            .arg("-TERM")
+            .arg(pid.to_string())
+            .output();
+        match result {
+            Ok(output) if output.status.success() => Ok(()),
+            Ok(output) => Err(format!(
+                "Failed to kill process with pid: {}, error: {}",
+                pid,
+                String::from_utf8_lossy(&output.stderr)
+            )
+            .into()),
+            Err(e) => Err(format!("Failed to execute kill command: {}", e).into()),
         }
     }
 
@@ -152,7 +162,7 @@ where
     ///
     /// This function returns an error because killing a process is not supported on non-Unix platforms.
     #[cfg(not(unix))]
-    fn kill_process(&self, _pid: i32) -> Result<(), Box<dyn Error>> {
+    fn kill_process(&self, _pid: i32) -> Result<(), Box<dyn std::error::Error>> {
         Err("kill_process is not supported on non-Unix platforms".into())
     }
 }
