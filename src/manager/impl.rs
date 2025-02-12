@@ -72,9 +72,9 @@ where
         let exe_path: PathBuf = std::env::current_exe()?;
         let mut cmd: Command = Command::new(exe_path);
         cmd.env(RUNNING_AS_DAEMON, RUNNING_AS_DAEMON_VALUE)
-            .stdout(Stdio::inherit())
-            .stderr(Stdio::inherit())
-            .stdin(Stdio::inherit());
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .stdin(Stdio::null());
         cmd.spawn()?;
         exit(0);
     }
@@ -103,9 +103,9 @@ where
         let exe_path: PathBuf = std::env::current_exe()?;
         let mut cmd: Command = Command::new(exe_path);
         cmd.env(RUNNING_AS_DAEMON, RUNNING_AS_DAEMON_VALUE)
-            .stdout(Stdio::inherit())
-            .stderr(Stdio::inherit())
-            .stdin(Stdio::inherit())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .stdin(Stdio::null())
             .creation_flags(0x00000008);
         cmd.spawn()?;
         std::process::exit(0);
