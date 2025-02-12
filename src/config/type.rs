@@ -10,6 +10,4 @@
 #[allow(dead_code)]
 pub struct ServerManagerConfig {
     pub pid_file: String,
-    pub stdout_log: String,
-    pub stderr_log: String,
 }

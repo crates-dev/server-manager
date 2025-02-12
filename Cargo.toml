@@ -1,6 +1,6 @@
 [package]
 name = "server-manager"
-version = "3.0.4"
+version = "3.0.5"
 edition = "2021"
 authors = ["ltpp-universe <root@ltpp.vip>"] 
 license = "MIT"
@@ -12,7 +12,9 @@ exclude = [
     "target",
     "Cargo.lock",
     "sh",
-    ".github"
+    ".github",
+    "**/*.pid",
+    "**/*.log"
 ]
 
 [dependencies]
