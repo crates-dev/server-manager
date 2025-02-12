@@ -75,8 +75,9 @@ where
             .stdout(Stdio::null())
             .stderr(Stdio::null())
             .stdin(Stdio::null());
-        cmd.spawn()?;
-        exit(0);
+        cmd.spawn()
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+        Ok(())
     }
 
     #[cfg(windows)]
@@ -107,8 +108,9 @@ where
             .stderr(Stdio::null())
             .stdin(Stdio::null())
             .creation_flags(0x00000008);
-        cmd.spawn()?;
-        std::process::exit(0);
+        cmd.spawn()
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+        Ok(())
     }
 
     /// Title: Read process ID from the PID file
