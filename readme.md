@@ -13,7 +13,7 @@
 
 [Api Docs](https://docs.rs/server-manager/latest/server_manager/)
 
-> `server-manager` is a Rust library for managing server processes. It encapsulates service startup, shutdown, and background daemon mode. Users can specify the PID file, log file paths, and other configurations through custom settings, while also passing in their own asynchronous server function for execution. The library supports both synchronous and asynchronous operations. On Unix platforms, it enables background daemon processes, while on non-Unix platforms, it returns an appropriate error message.
+> `server-manager` is a Rust library for managing server processes. It encapsulates service startup, shutdown, and background daemon mode. Users can specify the PID file, log file paths, and other configurations through custom settings, while also passing in their own asynchronous server function for execution. The library supports both synchronous and asynchronous operations. On Unix and Windows platforms, it enables background daemon processes.
 
 ## Installation
 
