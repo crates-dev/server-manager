@@ -3,6 +3,7 @@
 ## server-manager
 
 [![](https://img.shields.io/crates/v/server-manager.svg)](https://crates.io/crates/server-manager)
+[![](https://img.shields.io/crates/d/server-manager.svg)](https://img.shields.io/crates/d/server-manager.svg)
 [![](https://docs.rs/server-manager/badge.svg)](https://docs.rs/server-manager)
 [![](https://github.com/ltpp-universe/server-manager/workflows/Rust/badge.svg)](https://github.com/ltpp-universe/server-manager/actions?query=workflow:Rust)
 [![](https://img.shields.io/crates/l/server-manager.svg)](./LICENSE)
