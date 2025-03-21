@@ -193,7 +193,7 @@ where
         type UINT = u32;
         const PROCESS_TERMINATE: DWORD = 0x0001;
         const PROCESS_ALL_ACCESS: DWORD = 0x1F0FFF;
-        extern "system" {
+        unsafe extern "system" {
             fn OpenProcess(
                 dwDesiredAccess: DWORD,
                 bInheritHandle: BOOL,

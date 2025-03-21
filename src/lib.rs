@@ -7,7 +7,7 @@ pub(crate) use manager::constant::*;
 pub(crate) use std::{
     fs,
     path::PathBuf,
-    process::{exit, id, Command, Stdio},
+    process::{Command, Stdio, exit, id},
 };
 #[allow(unused_imports)]
 pub(crate) use tokio::runtime::Runtime;
