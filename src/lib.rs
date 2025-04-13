@@ -2,7 +2,7 @@ pub(crate) mod cfg;
 pub(crate) mod config;
 pub(crate) mod manager;
 
-pub(crate) use manager::constant::*;
+pub(crate) use manager::r#const::*;
 #[allow(unused_imports)]
 pub(crate) use std::{
     fs,
