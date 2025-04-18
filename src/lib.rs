@@ -12,5 +12,5 @@ pub(crate) use std::{
 #[allow(unused_imports)]
 pub(crate) use tokio::runtime::Runtime;
 
-pub use config::r#type::*;
-pub use manager::r#type::*;
+pub use config::r#struct::*;
+pub use manager::r#struct::*;
