@@ -5,7 +5,7 @@
 [![](https://img.shields.io/crates/v/server-manager.svg)](https://crates.io/crates/server-manager)
 [![](https://img.shields.io/crates/d/server-manager.svg)](https://img.shields.io/crates/d/server-manager.svg)
 [![](https://docs.rs/server-manager/badge.svg)](https://docs.rs/server-manager)
-[![](https://github.com/ltpp-universe/server-manager/workflows/Rust/badge.svg)](https://github.com/ltpp-universe/server-manager/actions?query=workflow:Rust)
+[![](https://github.com/eastspire/server-manager/workflows/Rust/badge.svg)](https://github.com/eastspire/server-manager/actions?query=workflow:Rust)
 [![](https://img.shields.io/crates/l/server-manager.svg)](./LICENSE)
 
 </center>
@@ -57,4 +57,4 @@ Contributions are welcome! Please open an issue or submit a pull request.
 
 ## Contact
 
-For any inquiries, please reach out to the author at [ltpp-universe <root@ltpp.vip>](mailto:root@ltpp.vip).
+For any inquiries, please reach out to the author at [eastspire <root@ltpp.vip>](mailto:root@ltpp.vip).
