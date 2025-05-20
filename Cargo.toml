@@ -1,12 +1,12 @@
 [package]
 name = "server-manager"
-version = "3.2.1"
+version = "3.2.2"
 edition = "2024"
-authors = ["ltpp-universe <root@ltpp.vip>"] 
+authors = ["eastspire <root@ltpp.vip>"] 
 license = "MIT"
 description = """`server-manager` is a Rust library for managing server processes. It encapsulates service startup, shutdown, and background daemon mode. Users can specify the PID file, log file paths, and other configurations through custom settings, while also passing in their own asynchronous server function for execution. The library supports both synchronous and asynchronous operations. On Unix and Windows platforms, it enables background daemon processes."""
 keywords = ["manager", "processes", "libc", "linux", "unix"]
-repository = "https://github.com/ltpp-universe/server-manager.git"
+repository = "https://github.com/eastspire/server-manager.git"
 categories = ["development-tools"]
 exclude = [
     "target",
@@ -18,7 +18,7 @@ exclude = [
 ]
 
 [dependencies]
-tokio = { version = "1.44.2", features = ["full"] }
+tokio = { version = "1.45.0", features = ["full"] }
 
 [profile.dev]
 incremental = false
