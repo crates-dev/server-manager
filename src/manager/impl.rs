@@ -41,10 +41,10 @@ where
     /// - None
     ///
     /// Returns:
-    /// - `Result<(), Box<dyn std::error::Error>>`: Operation result.
+    /// - `ServerManagerResult`: Operation result.
     ///
     /// This function reads the process ID from the PID file and attempts to kill the process using a SIGTERM signal.
-    pub fn stop(&self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn stop(&self) -> ServerManagerResult {
         let pid: i32 = self.read_pid_file()?;
         self.kill_process(pid)
     }
@@ -56,11 +56,11 @@ where
     /// - None
     ///
     /// Returns:
-    /// - `Result<(), Box<dyn std::error::Error>>`: Operation result.
+    /// - `ServerManagerResult`: Operation result.
     ///
     /// This function returns an error because daemon mode is not supported on non-Unix platforms.
     #[cfg(not(windows))]
-    pub fn start_daemon(&self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn start_daemon(&self) -> ServerManagerResult {
         if std::env::var(RUNNING_AS_DAEMON).is_ok() {
             self.write_pid_file()?;
             let rt: Runtime = Runtime::new()?;
@@ -75,8 +75,7 @@ where
             .stdout(Stdio::null())
             .stderr(Stdio::null())
             .stdin(Stdio::null());
-        cmd.spawn()
-            .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+        cmd.spawn().map_err(|e| Box::new(e) as Box<dyn Error>)?;
         Ok(())
     }
 
@@ -88,10 +87,10 @@ where
     /// - None
     ///
     /// Returns:
-    /// - `Result<(), Box<dyn std::error::Error>>`: Operation result.
+    /// - `ServerManagerResult`: Operation result.
     ///
     /// This function starts a detached process on Windows using Windows API.
-    pub fn start_daemon(&self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn start_daemon(&self) -> ServerManagerResult {
         use std::os::windows::process::CommandExt;
         if std::env::var(RUNNING_AS_DAEMON).is_ok() {
             self.write_pid_file()?;
@@ -108,8 +107,7 @@ where
             .stderr(Stdio::null())
             .stdin(Stdio::null())
             .creation_flags(0x00000008);
-        cmd.spawn()
-            .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+        cmd.spawn().map_err(|e| Box::new(e) as Box<dyn Error>)?;
         Ok(())
     }
 
@@ -119,10 +117,10 @@ where
     /// - None
     ///
     /// Returns:
-    /// - `Result<i32, Box<dyn std::error::Error>>`: The process ID if successful.
+    /// - `Result<i32, Box<dyn Error>>`: The process ID if successful.
     ///
     /// This function reads the content of the PID file specified in the configuration and parses it as an integer.    
-    fn read_pid_file(&self) -> Result<i32, Box<dyn std::error::Error>> {
+    fn read_pid_file(&self) -> Result<i32, Box<dyn Error>> {
         let pid_str: String = fs::read_to_string(&self.config.pid_file)?;
         let pid: i32 = pid_str.trim().parse::<i32>()?;
         Ok(pid)
@@ -134,11 +132,11 @@ where
     /// - None
     ///
     /// Returns:
-    /// - `Result<(), Box<dyn std::error::Error>>`: Operation result.
+    /// - `ServerManagerResult`: Operation result.
     ///
     /// This function obtains the current process ID and writes it as a string to the PID file specified in the configuration.
-    fn write_pid_file(&self) -> Result<(), Box<dyn std::error::Error>> {
-        if let Some(parent) = std::path::Path::new(&self.config.pid_file).parent() {
+    fn write_pid_file(&self) -> ServerManagerResult {
+        if let Some(parent) = Path::new(&self.config.pid_file).parent() {
             fs::create_dir_all(parent)?;
         }
         let pid: u32 = id();
@@ -152,12 +150,12 @@ where
     /// - `pid`: The process ID to kill.
     ///
     /// Returns:
-    /// - `Result<(), Box<dyn std::error::Error>>`: Operation result.
+    /// - `ServerManagerResult`: Operation result.
     ///
     /// This function sends a SIGTERM signal to the process with the given PID using libc::kill.
     #[cfg(not(windows))]
-    fn kill_process(&self, pid: i32) -> Result<(), Box<dyn std::error::Error>> {
-        let result: Result<std::process::Output, std::io::Error> = Command::new("kill")
+    fn kill_process(&self, pid: i32) -> ServerManagerResult {
+        let result: Result<Output, Error> = Command::new("kill")
             .arg("-TERM")
             .arg(pid.to_string())
             .output();
@@ -181,11 +179,11 @@ where
     /// - ``pid``: The process ID to kill.
     ///
     /// Returns:
-    /// - ``Result<(), Box<dyn std::error::Error>>``: Operation result.
+    /// - ``ServerManagerResult``: Operation result.
     ///
     /// This function attempts to kill the process with the given PID using Windows API.
     /// If opening or terminating the process fails, the detailed error code is returned.
-    fn kill_process(&self, pid: i32) -> Result<(), Box<dyn std::error::Error>> {
+    fn kill_process(&self, pid: i32) -> ServerManagerResult {
         use std::ffi::c_void;
         type DWORD = u32;
         type BOOL = i32;
@@ -231,6 +229,48 @@ where
         unsafe {
             CloseHandle(process_handle);
         }
+        Ok(())
+    }
+
+    /// Title: Start the server with hot-reloading using cargo-watch
+    ///
+    /// Parameters:
+    /// - `run_args`: Arguments to pass to `cargo-watch`.
+    ///
+    /// Returns:
+    /// - `ServerManagerResult`: Operation result.
+    ///
+    /// This function checks for `cargo-watch` installation, installs it if missing,
+    /// and then uses it to run the server with hot-reloading.
+    pub fn hot_restart(&self, run_args: &str) -> ServerManagerResult {
+        let cargo_watch_installed: Output = Command::new("cargo")
+            .arg("install")
+            .arg("--list")
+            .output()?;
+        if !String::from_utf8_lossy(&cargo_watch_installed.stdout).contains("cargo-watch") {
+            eprintln!("Cargo-watch not found. Attempting to install...");
+            let install_status = Command::new("cargo")
+                .arg("install")
+                .arg("cargo-watch")
+                .stdout(Stdio::inherit())
+                .stderr(Stdio::inherit())
+                .spawn()? // Use spawn and wait for better output during install
+                .wait()?;
+            if !install_status.success() {
+                return Err("Failed to install cargo-watch. Please install it manually: `cargo install cargo-watch`".into());
+            }
+            eprintln!("Cargo-watch installed successfully.");
+        }
+        let mut command: Command = Command::new("cargo-watch");
+        let args: Vec<&str> = run_args.split_whitespace().collect();
+        command.args(&args);
+        eprintln!("Starting server with hot-reloading...");
+        command
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
+            .stdin(Stdio::inherit())
+            .spawn()
+            .map_err(|e| Box::new(e) as Box<dyn Error>)?;
         Ok(())
     }
 }

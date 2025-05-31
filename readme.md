@@ -30,6 +30,7 @@ cargo add server-manager
 use server_manager::*;
 use std::fs;
 use std::time::Duration;
+
 let pid_file: String = "./process/test_pid.pid".to_string();
 let _ = fs::remove_file(&pid_file);
 let config: ServerManagerConfig = ServerManagerConfig {
@@ -39,12 +40,14 @@ let dummy_server = || async {
     tokio::time::sleep(Duration::from_secs(1)).await;
 };
 let manager = ServerManager::new(config, dummy_server);
-let res: Result<(), Box<dyn std::error::Error>> = manager.start_daemon();
+let res: ServerManagerResult = manager.start_daemon();
 println!("start_daemon {:?}", res);
-let res: Result<(), Box<dyn std::error::Error>> = manager.stop();
+let res: ServerManagerResult = manager.stop();
 println!("stop {:?}", res);
 manager.start().await;
 let _ = fs::remove_file(&pid_file);
+let res: ServerManagerResult = manager.hot_restart("build");
+println!("hot_restart {:?}", res);
 ```
 
 ## License

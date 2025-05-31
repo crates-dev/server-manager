@@ -1,6 +1,6 @@
 [package]
 name = "server-manager"
-version = "3.2.4"
+version = "3.3.0"
 edition = "2024"
 authors = ["root@ltpp.vip"] 
 license = "MIT"
@@ -18,7 +18,7 @@ exclude = [
 ]
 
 [dependencies]
-tokio = { version = "1.45.0", features = ["full"] }
+tokio = { version = "1.45.1", features = ["full"] }
 
 [profile.dev]
 incremental = false
