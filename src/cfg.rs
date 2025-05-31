@@ -19,6 +19,4 @@ async fn test_start_executes_server_fn() {
     println!("stop {:?}", res);
     manager.start().await;
     let _ = fs::remove_file(&pid_file);
-    let res: ServerManagerResult = manager.hot_restart("build");
-    println!("hot_restart {:?}", res);
 }

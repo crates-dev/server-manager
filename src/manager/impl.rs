@@ -263,13 +263,15 @@ where
         }
         let mut command: Command = Command::new("cargo-watch");
         let args: Vec<&str> = run_args.split_whitespace().collect();
-        command.args(&args);
-        eprintln!("Starting server with hot-reloading...");
         command
+            .args(&args)
             .stdout(Stdio::inherit())
             .stderr(Stdio::inherit())
-            .stdin(Stdio::inherit())
+            .stdin(Stdio::inherit());
+        command
             .spawn()
+            .map_err(|e| Box::new(e) as Box<dyn Error>)?
+            .wait()
             .map_err(|e| Box::new(e) as Box<dyn Error>)?;
         Ok(())
     }
