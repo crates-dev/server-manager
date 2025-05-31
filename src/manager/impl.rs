@@ -242,7 +242,7 @@ where
     ///
     /// This function checks for `cargo-watch` installation, installs it if missing,
     /// and then uses it to run the server with hot-reloading.
-    pub fn hot_restart(&self, run_args: &str) -> ServerManagerResult {
+    pub fn hot_restart(&self, run_args: &[&str]) -> ServerManagerResult {
         let cargo_watch_installed: Output = Command::new("cargo")
             .arg("install")
             .arg("--list")
@@ -262,12 +262,14 @@ where
             eprintln!("Cargo-watch installed successfully.");
         }
         let mut command: Command = Command::new("cargo-watch");
-        let args: Vec<&str> = run_args.split_whitespace().collect();
         command
-            .args(&args)
+            .args(run_args)
             .stdout(Stdio::inherit())
             .stderr(Stdio::inherit())
             .stdin(Stdio::inherit());
+        let display_args: Vec<String> = run_args.iter().map(|s| s.to_string()).collect();
+        let full_cmd = format!("cargo-watch {}", display_args.join(" "));
+        println!("[debug] executing: {}", full_cmd);
         command
             .spawn()
             .map_err(|e| Box::new(e) as Box<dyn Error>)?

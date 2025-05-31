@@ -46,7 +46,8 @@ let res: ServerManagerResult = manager.stop();
 println!("stop {:?}", res);
 manager.start().await;
 let _ = fs::remove_file(&pid_file);
-let res: ServerManagerResult = manager.hot_restart("build");
+let res: ServerManagerResult =
+    manager.hot_restart(&["--once", "-x", "check", "-x", "build --release"]);
 println!("hot_restart {:?}", res);
 ```
 
