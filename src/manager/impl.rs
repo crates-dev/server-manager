@@ -75,7 +75,8 @@ where
             .stdout(Stdio::null())
             .stderr(Stdio::null())
             .stdin(Stdio::null());
-        cmd.spawn().map_err(|e| Box::new(e) as Box<dyn Error>)?;
+        cmd.spawn()
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
         Ok(())
     }
 
@@ -107,7 +108,8 @@ where
             .stderr(Stdio::null())
             .stdin(Stdio::null())
             .creation_flags(0x00000008);
-        cmd.spawn().map_err(|e| Box::new(e) as Box<dyn Error>)?;
+        cmd.spawn()
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
         Ok(())
     }
 
@@ -120,7 +122,7 @@ where
     /// - `Result<i32, Box<dyn Error>>`: The process ID if successful.
     ///
     /// This function reads the content of the PID file specified in the configuration and parses it as an integer.    
-    fn read_pid_file(&self) -> Result<i32, Box<dyn Error>> {
+    fn read_pid_file(&self) -> Result<i32, Box<dyn std::error::Error>> {
         let pid_str: String = fs::read_to_string(&self.config.pid_file)?;
         let pid: i32 = pid_str.trim().parse::<i32>()?;
         Ok(pid)
@@ -155,7 +157,7 @@ where
     /// This function sends a SIGTERM signal to the process with the given PID using libc::kill.
     #[cfg(not(windows))]
     fn kill_process(&self, pid: i32) -> ServerManagerResult {
-        let result: Result<Output, Error> = Command::new("kill")
+        let result: Result<Output, std::io::Error> = Command::new("kill")
             .arg("-TERM")
             .arg(pid.to_string())
             .output();
@@ -272,9 +274,9 @@ where
         println!("[debug] executing: {}", full_cmd);
         command
             .spawn()
-            .map_err(|e| Box::new(e) as Box<dyn Error>)?
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?
             .wait()
-            .map_err(|e| Box::new(e) as Box<dyn Error>)?;
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
         Ok(())
     }
 }

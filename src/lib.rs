@@ -9,7 +9,6 @@ pub(crate) use manager::r#const::*;
 
 #[allow(unused_imports)]
 pub(crate) use std::{
-    error::Error,
     fs,
     path::{Path, PathBuf},
     process::{Command, Output, Stdio, exit, id},
