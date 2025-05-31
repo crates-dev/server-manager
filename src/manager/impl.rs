@@ -277,6 +277,6 @@ where
             .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?
             .wait()
             .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
-        Ok(())
+        exit(0);
     }
 }
