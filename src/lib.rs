@@ -11,7 +11,7 @@ pub(crate) use manager::r#const::*;
 pub(crate) use std::{
     fs,
     path::{Path, PathBuf},
-    process::{Command, Output, Stdio, exit, id},
+    process::{Child, Command, ExitStatus, Output, Stdio, exit, id},
 };
 
 #[allow(unused_imports)]

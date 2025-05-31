@@ -5,7 +5,7 @@ where
     F: Fn() -> Fut,
     Fut: std::future::Future<Output = ()>,
 {
-    /// Title: Create a new ServerManager instance
+    /// Create a new ServerManager instance
     ///
     /// Parameters:
     /// - `config`: The server configuration containing PID file path and log paths.
@@ -17,7 +17,7 @@ where
         Self { config, server_fn }
     }
 
-    /// Title: Start the server in foreground mode
+    /// Start the server in foreground mode
     ///
     /// Parameters:
     /// - None
@@ -35,7 +35,7 @@ where
         (self.server_fn)().await;
     }
 
-    /// Title: Stop the server
+    /// Stop the server
     ///
     /// Parameters:
     /// - None
@@ -50,7 +50,7 @@ where
     }
 
     /// Start the server in daemon (background) mode on Unix platforms.
-    /// Title: Start the server in daemon mode on non-Unix platforms
+    /// Start the server in daemon mode on non-Unix platforms
     ///
     /// Parameters:
     /// - None
@@ -82,7 +82,7 @@ where
 
     #[cfg(windows)]
     /// Start the server in daemon (background) mode on Windows platforms
-    /// Title: Start the server in daemon mode on Windows platforms
+    /// Start the server in daemon mode on Windows platforms
     ///
     /// Parameters:
     /// - None
@@ -113,7 +113,7 @@ where
         Ok(())
     }
 
-    /// Title: Read process ID from the PID file
+    /// Read process ID from the PID file
     ///
     /// Parameters:
     /// - None
@@ -128,7 +128,7 @@ where
         Ok(pid)
     }
 
-    /// Title: Write current process ID to the PID file
+    /// Write current process ID to the PID file
     ///
     /// Parameters:
     /// - None
@@ -146,7 +146,7 @@ where
         Ok(())
     }
 
-    /// Title: Kill process by PID on Unix platforms
+    /// Kill process by PID on Unix platforms
     ///
     /// Parameters:
     /// - `pid`: The process ID to kill.
@@ -175,7 +175,7 @@ where
 
     #[cfg(windows)]
     /// Kill process by PID on Windows platforms
-    /// Title: Kill process by PID on Windows platforms
+    /// Kill process by PID on Windows platforms
     ///
     /// Parameters:
     /// - ``pid``: The process ID to kill.
@@ -234,29 +234,27 @@ where
         Ok(())
     }
 
-    /// Title: Start the server with hot-reloading using cargo-watch
+    /// Run the server with cargo-watch
     ///
     /// Parameters:
     /// - `run_args`: Arguments to pass to `cargo-watch`.
+    /// - `wait`: Whether to wait for the process to finish.
     ///
     /// Returns:
     /// - `ServerManagerResult`: Operation result.
-    ///
-    /// This function checks for `cargo-watch` installation, installs it if missing,
-    /// and then uses it to run the server with hot-reloading.
-    pub fn hot_restart(&self, run_args: &[&str]) -> ServerManagerResult {
+    fn run_with_cargo_watch(&self, run_args: &[&str], wait: bool) -> ServerManagerResult {
         let cargo_watch_installed: Output = Command::new("cargo")
             .arg("install")
             .arg("--list")
             .output()?;
         if !String::from_utf8_lossy(&cargo_watch_installed.stdout).contains("cargo-watch") {
             eprintln!("Cargo-watch not found. Attempting to install...");
-            let install_status = Command::new("cargo")
+            let install_status: ExitStatus = Command::new("cargo")
                 .arg("install")
                 .arg("cargo-watch")
                 .stdout(Stdio::inherit())
                 .stderr(Stdio::inherit())
-                .spawn()? // Use spawn and wait for better output during install
+                .spawn()?
                 .wait()?;
             if !install_status.success() {
                 return Err("Failed to install cargo-watch. Please install it manually: `cargo install cargo-watch`".into());
@@ -269,14 +267,41 @@ where
             .stdout(Stdio::inherit())
             .stderr(Stdio::inherit())
             .stdin(Stdio::inherit());
-        let display_args: Vec<String> = run_args.iter().map(|s| s.to_string()).collect();
-        let full_cmd = format!("cargo-watch {}", display_args.join(" "));
-        println!("[debug] executing: {}", full_cmd);
-        command
+        let mut child: Child = command
             .spawn()
-            .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?
-            .wait()
             .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+        if wait {
+            child
+                .wait()
+                .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+        }
         exit(0);
+    }
+
+    /// Start the server with hot-reloading using cargo-watch
+    ///
+    /// Parameters:
+    /// - `run_args`: Arguments to pass to `cargo-watch`.
+    ///
+    /// Returns:
+    /// - `ServerManagerResult`: Operation result.
+    ///
+    /// This function checks for `cargo-watch` installation, installs it if missing,
+    /// and then uses it to run the server with hot-reloading.
+    pub fn hot_restart(&self, run_args: &[&str]) -> ServerManagerResult {
+        self.run_with_cargo_watch(run_args, false)
+    }
+
+    /// Start the server with hot-reloading using cargo-watch and exit immediately
+    ///
+    /// Parameters:
+    /// - `run_args`: Arguments to pass to `cargo-watch`.
+    ///
+    /// Returns:
+    /// - `ServerManagerResult`: Operation result.
+    ///
+    /// Same as `hot_restart` but does not wait for the process to finish.
+    pub fn hot_restart_wait(&self, run_args: &[&str]) -> ServerManagerResult {
+        self.run_with_cargo_watch(run_args, true)
     }
 }
