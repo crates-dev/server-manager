@@ -1,8 +1,8 @@
 [package]
 name = "server-manager"
-version = "3.4.4"
+version = "3.4.5"
 edition = "2024"
-authors = ["root@ltpp.vip"] 
+authors = ["root@ltpp.vip"]
 license = "MIT"
 description = """server-manager is a rust library for managing server processes. It encapsulates service startup, shutdown, and background daemon mode. Users can specify the PID file, log file paths, and other configurations through custom settings, while also passing in their own asynchronous server function for execution. The library supports both synchronous and asynchronous operations. On Unix and Windows platforms, it enables background daemon processes."""
 keywords = ["manager", "processes", "libc", "linux", "unix"]
@@ -18,7 +18,7 @@ exclude = [
 ]
 
 [dependencies]
-tokio = { version = "1.45.1", features = ["full"] }
+tokio = { version = "1.46.1", features = ["full"] }
 
 [profile.dev]
 incremental = false
