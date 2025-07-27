@@ -1,15 +1,12 @@
 use crate::*;
 
-/// Title: ServerManager structure for managing the server process
+/// Main structure for managing server processes.
 ///
-/// Parameters:
-/// - None
-///
-/// Returns:
-/// - None
-///
-/// This structure encapsulates the server management operations and holds the user-provided configuration and the server function.
+/// Encapsulates all server management operations and holds necessary configuration.
+#[derive(Clone)]
 pub struct ServerManager<F> {
+    /// Configuration parameters for server management.
     pub(crate) config: ServerManagerConfig,
+    /// Server function to be executed.
     pub(crate) server_fn: F,
 }

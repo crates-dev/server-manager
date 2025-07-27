@@ -1,13 +1,8 @@
-/// Title: ServerManagerConfig structure for configuration parameters
+/// Configuration parameters for server management.
 ///
-/// Parameters:
-/// - None
-///
-/// Returns:
-/// - None
-///
-/// This structure holds the configuration values including the PID file path.
-#[allow(dead_code)]
+/// Holds all necessary configuration values for server operation.
+#[derive(Clone)]
 pub struct ServerManagerConfig {
+    /// Path to the PID file for process tracking.
     pub pid_file: String,
 }

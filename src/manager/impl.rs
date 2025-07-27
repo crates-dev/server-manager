@@ -1,32 +1,34 @@
 use crate::*;
 
+/// Implementation of server management operations.
+///
+/// Provides methods for starting, stopping and managing server processes.
 impl<F, Fut> ServerManager<F>
 where
     F: Fn() -> Fut,
     Fut: std::future::Future<Output = ()>,
 {
-    /// Create a new ServerManager instance
+    /// Creates a new ServerManager instance.
     ///
-    /// Parameters:
-    /// - `config`: The server configuration containing PID file path and log paths.
-    /// - `server_fn`: A closure representing the asynchronous server function.
+    /// # Arguments
     ///
-    /// Returns:
-    /// - `ServerManager<F>`: A new instance of ServerManager.
+    /// - `ServerManagerConfig` - Server configuration parameters.
+    /// - `F` - Asynchronous server function.
+    ///
+    /// # Returns
+    ///
+    /// - `ServerManager<F>` - New server manager instance.
     pub fn new(config: ServerManagerConfig, server_fn: F) -> Self {
         Self { config, server_fn }
     }
 
-    /// Start the server in foreground mode
+    /// Starts the server in foreground mode.
     ///
-    /// Parameters:
-    /// - None
+    /// Writes the current process ID to the PID file and executes the server function.
     ///
-    /// Returns:
-    /// - `()`: No return value.
+    /// # Returns
     ///
-    /// This function writes the current process ID to the PID file specified in the configuration
-    /// and then runs the server function asynchronously.
+    /// - `()` - No return value.
     pub async fn start(&self) {
         if let Err(e) = self.write_pid_file() {
             eprintln!("Failed to write pid file: {}", e);
@@ -35,30 +37,23 @@ where
         (self.server_fn)().await;
     }
 
-    /// Stop the server
+    /// Stops the running server process.
     ///
-    /// Parameters:
-    /// - None
+    /// Reads PID from file and terminates the process.
     ///
-    /// Returns:
-    /// - `ServerManagerResult`: Operation result.
+    /// # Returns
     ///
-    /// This function reads the process ID from the PID file and attempts to kill the process using a SIGTERM signal.
+    /// - `ServerManagerResult` - Operation result.
     pub fn stop(&self) -> ServerManagerResult {
         let pid: i32 = self.read_pid_file()?;
         self.kill_process(pid)
     }
 
-    /// Start the server in daemon (background) mode on Unix platforms.
-    /// Start the server in daemon mode on non-Unix platforms
+    /// Starts the server in daemon (background) mode on Unix platforms.
     ///
-    /// Parameters:
-    /// - None
+    /// # Returns
     ///
-    /// Returns:
-    /// - `ServerManagerResult`: Operation result.
-    ///
-    /// This function returns an error because daemon mode is not supported on non-Unix platforms.
+    /// - `ServerManagerResult` - Operation result.
     #[cfg(not(windows))]
     pub fn start_daemon(&self) -> ServerManagerResult {
         if std::env::var(RUNNING_AS_DAEMON).is_ok() {
@@ -81,16 +76,11 @@ where
     }
 
     #[cfg(windows)]
-    /// Start the server in daemon (background) mode on Windows platforms
-    /// Start the server in daemon mode on Windows platforms
+    /// Starts the server in daemon (background) mode on Windows platforms.
     ///
-    /// Parameters:
-    /// - None
+    /// # Returns
     ///
-    /// Returns:
-    /// - `ServerManagerResult`: Operation result.
-    ///
-    /// This function starts a detached process on Windows using Windows API.
+    /// - `ServerManagerResult` - Operation result.
     pub fn start_daemon(&self) -> ServerManagerResult {
         use std::os::windows::process::CommandExt;
         if std::env::var(RUNNING_AS_DAEMON).is_ok() {
@@ -113,30 +103,22 @@ where
         Ok(())
     }
 
-    /// Read process ID from the PID file
+    /// Reads process ID from the PID file.
     ///
-    /// Parameters:
-    /// - None
+    /// # Returns
     ///
-    /// Returns:
-    /// - `Result<i32, Box<dyn Error>>`: The process ID if successful.
-    ///
-    /// This function reads the content of the PID file specified in the configuration and parses it as an integer.    
+    /// - `Result<i32, Box<dyn Error>>` - Process ID if successful.
     fn read_pid_file(&self) -> Result<i32, Box<dyn std::error::Error>> {
         let pid_str: String = fs::read_to_string(&self.config.pid_file)?;
         let pid: i32 = pid_str.trim().parse::<i32>()?;
         Ok(pid)
     }
 
-    /// Write current process ID to the PID file
+    /// Writes current process ID to the PID file.
     ///
-    /// Parameters:
-    /// - None
+    /// # Returns
     ///
-    /// Returns:
-    /// - `ServerManagerResult`: Operation result.
-    ///
-    /// This function obtains the current process ID and writes it as a string to the PID file specified in the configuration.
+    /// - `ServerManagerResult` - Operation result.
     fn write_pid_file(&self) -> ServerManagerResult {
         if let Some(parent) = Path::new(&self.config.pid_file).parent() {
             fs::create_dir_all(parent)?;
@@ -146,15 +128,15 @@ where
         Ok(())
     }
 
-    /// Kill process by PID on Unix platforms
+    /// Kills process by PID on Unix platforms.
     ///
-    /// Parameters:
-    /// - `pid`: The process ID to kill.
+    /// # Arguments
     ///
-    /// Returns:
-    /// - `ServerManagerResult`: Operation result.
+    /// - `i32` - Process ID to terminate.
     ///
-    /// This function sends a SIGTERM signal to the process with the given PID using libc::kill.
+    /// # Returns
+    ///
+    /// - `ServerManagerResult` - Operation result.
     #[cfg(not(windows))]
     fn kill_process(&self, pid: i32) -> ServerManagerResult {
         let result: Result<Output, std::io::Error> = Command::new("kill")
@@ -174,17 +156,15 @@ where
     }
 
     #[cfg(windows)]
-    /// Kill process by PID on Windows platforms
-    /// Kill process by PID on Windows platforms
+    /// Kills process by PID on Windows platforms.
     ///
-    /// Parameters:
-    /// - ``pid``: The process ID to kill.
+    /// # Arguments
     ///
-    /// Returns:
-    /// - ``ServerManagerResult``: Operation result.
+    /// - `i32` - Process ID to terminate.
     ///
-    /// This function attempts to kill the process with the given PID using Windows API.
-    /// If opening or terminating the process fails, the detailed error code is returned.
+    /// # Returns
+    ///
+    /// - `ServerManagerResult` - Operation result.
     fn kill_process(&self, pid: i32) -> ServerManagerResult {
         use std::ffi::c_void;
         type DWORD = u32;
@@ -234,14 +214,16 @@ where
         Ok(())
     }
 
-    /// Run the server with cargo-watch
+    /// Runs the server with cargo-watch.
     ///
-    /// Parameters:
-    /// - `run_args`: Arguments to pass to `cargo-watch`.
-    /// - `wait`: Whether to wait for the process to finish.
+    /// # Arguments
     ///
-    /// Returns:
-    /// - `ServerManagerResult`: Operation result.
+    /// - `&[&str]` - Arguments for cargo-watch.
+    /// - `bool` - Whether to wait for process completion.
+    ///
+    /// # Returns
+    ///
+    /// - `ServerManagerResult` - Operation result.
     fn run_with_cargo_watch(&self, run_args: &[&str], wait: bool) -> ServerManagerResult {
         let cargo_watch_installed: Output = Command::new("cargo")
             .arg("install")
@@ -278,29 +260,28 @@ where
         exit(0);
     }
 
-    /// Start the server with hot-reloading using cargo-watch
+    /// Starts the server with hot-reloading using cargo-watch.
     ///
-    /// Parameters:
-    /// - `run_args`: Arguments to pass to `cargo-watch`.
+    /// # Arguments
     ///
-    /// Returns:
-    /// - `ServerManagerResult`: Operation result.
+    /// - `&[&str]` - Arguments for cargo-watch.
     ///
-    /// This function checks for `cargo-watch` installation, installs it if missing,
-    /// and then uses it to run the server with hot-reloading.
+    /// # Returns
+    ///
+    /// - `ServerManagerResult` - Operation result.
     pub fn hot_restart(&self, run_args: &[&str]) -> ServerManagerResult {
         self.run_with_cargo_watch(run_args, false)
     }
 
-    /// Start the server with hot-reloading using cargo-watch and exit immediately
+    /// Starts the server with hot-reloading and waits for completion.
     ///
-    /// Parameters:
-    /// - `run_args`: Arguments to pass to `cargo-watch`.
+    /// # Arguments
     ///
-    /// Returns:
-    /// - `ServerManagerResult`: Operation result.
+    /// - `&[&str]` - Arguments for cargo-watch.
     ///
-    /// Same as `hot_restart` but does not wait for the process to finish.
+    /// # Returns
+    ///
+    /// - `ServerManagerResult` - Operation result.
     pub fn hot_restart_wait(&self, run_args: &[&str]) -> ServerManagerResult {
         self.run_with_cargo_watch(run_args, true)
     }
