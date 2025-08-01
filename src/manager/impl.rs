@@ -25,10 +25,6 @@ where
     /// Starts the server in foreground mode.
     ///
     /// Writes the current process ID to the PID file and executes the server function.
-    ///
-    /// # Returns
-    ///
-    /// - `()` - No return value.
     pub async fn start(&self) {
         if let Err(e) = self.write_pid_file() {
             eprintln!("Failed to write pid file: {}", e);
@@ -50,10 +46,6 @@ where
     }
 
     /// Starts the server in daemon (background) mode on Unix platforms.
-    ///
-    /// # Returns
-    ///
-    /// - `ServerManagerResult` - Operation result.
     #[cfg(not(windows))]
     pub fn start_daemon(&self) -> ServerManagerResult {
         if std::env::var(RUNNING_AS_DAEMON).is_ok() {
@@ -75,12 +67,8 @@ where
         Ok(())
     }
 
-    #[cfg(windows)]
     /// Starts the server in daemon (background) mode on Windows platforms.
-    ///
-    /// # Returns
-    ///
-    /// - `ServerManagerResult` - Operation result.
+    #[cfg(windows)]
     pub fn start_daemon(&self) -> ServerManagerResult {
         use std::os::windows::process::CommandExt;
         if std::env::var(RUNNING_AS_DAEMON).is_ok() {
@@ -107,7 +95,7 @@ where
     ///
     /// # Returns
     ///
-    /// - `Result<i32, Box<dyn Error>>` - Process ID if successful.
+    /// - `Result<i32, Box<dyn std::error::Error>>` - Process ID if successful.
     fn read_pid_file(&self) -> Result<i32, Box<dyn std::error::Error>> {
         let pid_str: String = fs::read_to_string(&self.config.pid_file)?;
         let pid: i32 = pid_str.trim().parse::<i32>()?;
@@ -155,7 +143,6 @@ where
         }
     }
 
-    #[cfg(windows)]
     /// Kills process by PID on Windows platforms.
     ///
     /// # Arguments
@@ -165,6 +152,7 @@ where
     /// # Returns
     ///
     /// - `ServerManagerResult` - Operation result.
+    #[cfg(windows)]
     fn kill_process(&self, pid: i32) -> ServerManagerResult {
         use std::ffi::c_void;
         type DWORD = u32;
