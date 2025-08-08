@@ -41,7 +41,7 @@ where
     ///
     /// - `ServerManagerResult` - Operation result.
     pub async fn stop(&self) -> ServerManagerResult {
-        (self.config.before_stop_hook)().await;
+        (self.config.stop_hook)().await;
         let pid: i32 = self.read_pid_file()?;
         self.kill_process(pid)
     }
@@ -49,7 +49,7 @@ where
     /// Starts the server in daemon (background) mode on Unix platforms.
     #[cfg(not(windows))]
     pub async fn start_daemon(&self) -> ServerManagerResult {
-        (self.config.before_start_daemon_hook)().await;
+        (self.config.start_hook)().await;
         if std::env::var(RUNNING_AS_DAEMON).is_ok() {
             self.write_pid_file()?;
             let rt: Runtime = Runtime::new()?;
@@ -72,7 +72,7 @@ where
     /// Starts the server in daemon (background) mode on Windows platforms.
     #[cfg(windows)]
     pub async fn start_daemon(&self) -> ServerManagerResult {
-        (self.config.before_start_daemon_hook)().await;
+        (self.config.start_hook)().await;
         use std::os::windows::process::CommandExt;
         if std::env::var(RUNNING_AS_DAEMON).is_ok() {
             self.write_pid_file()?;

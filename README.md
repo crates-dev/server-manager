@@ -35,16 +35,16 @@ let pid_file: String = "./process/test_pid.pid".to_string();
 let _ = fs::remove_file(&pid_file);
 let mut config = ServerManagerConfig::new(pid_file.clone());
 config
-    .set_before_start_daemon_hook(|| async {
+    .set_start_hook(|| async {
         println!("Before start daemon hook executed");
     })
-    .set_before_stop_hook(|| async {
+    .set_stop_hook(|| async {
         println!("Before stop hook executed");
     });
-let dummy_server = || async {
+let server = || async {
     tokio::time::sleep(Duration::from_secs(1)).await;
 };
-let manager = ServerManager::new(config, dummy_server);
+let manager = ServerManager::new(config, server);
 let res: ServerManagerResult = manager.start_daemon().await;
 println!("start_daemon {:?}", res);
 let res: ServerManagerResult = manager.stop().await;

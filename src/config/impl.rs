@@ -13,21 +13,21 @@ impl ServerManagerConfig {
         self
     }
 
-    pub fn set_before_stop_hook<F, Fut>(&mut self, f: F) -> &mut Self
+    pub fn set_stop_hook<F, Fut>(&mut self, f: F) -> &mut Self
     where
         F: Fn() -> Fut + Send + Sync + 'static,
         Fut: Future<Output = ()> + Send + 'static,
     {
-        self.before_stop_hook = Arc::new(move || Box::pin(f()));
+        self.stop_hook = Arc::new(move || Box::pin(f()));
         self
     }
 
-    pub fn set_before_start_daemon_hook<F, Fut>(&mut self, f: F) -> &mut Self
+    pub fn set_start_hook<F, Fut>(&mut self, f: F) -> &mut Self
     where
         F: Fn() -> Fut + Send + Sync + 'static,
         Fut: Future<Output = ()> + Send + 'static,
     {
-        self.before_start_daemon_hook = Arc::new(move || Box::pin(f()));
+        self.start_hook = Arc::new(move || Box::pin(f()));
         self
     }
 
@@ -35,12 +35,12 @@ impl ServerManagerConfig {
         &self.pid_file
     }
 
-    pub fn get_before_stop_hook(&self) -> &Hook {
-        &self.before_stop_hook
+    pub fn get_stop_hook(&self) -> &Hook {
+        &self.stop_hook
     }
 
-    pub fn get_before_start_daemon_hook(&self) -> &Hook {
-        &self.before_start_daemon_hook
+    pub fn get_start_hook(&self) -> &Hook {
+        &self.start_hook
     }
 }
 
@@ -49,8 +49,8 @@ impl Default for ServerManagerConfig {
         let empty_hook: Hook = Arc::new(|| Box::pin(async {}));
         Self {
             pid_file: Default::default(),
-            before_stop_hook: empty_hook.clone(),
-            before_start_daemon_hook: empty_hook,
+            stop_hook: empty_hook.clone(),
+            start_hook: empty_hook,
         }
     }
 }
