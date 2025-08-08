@@ -28,3 +28,6 @@ pub(crate) use std::{
 
 #[cfg(windows)]
 pub(crate) use tokio::runtime::Runtime;
+
+#[cfg(not(windows))]
+pub(crate) use tokio::runtime::Runtime;
