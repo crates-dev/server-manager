@@ -9,20 +9,22 @@
 //! it enables background daemon processes.
 
 pub(crate) mod cfg;
-pub(crate) mod config;
+pub mod config;
 pub(crate) mod manager;
 
-pub use config::r#struct::*;
+pub use config::*;
 pub use manager::{r#struct::*, r#type::*};
 
 pub(crate) use manager::r#const::*;
 
-#[allow(unused_imports)]
 pub(crate) use std::{
     fs,
+    future::Future,
     path::{Path, PathBuf},
+    pin::Pin,
     process::{Child, Command, ExitStatus, Output, Stdio, exit, id},
+    sync::Arc,
 };
 
-#[allow(unused_imports)]
+#[cfg(windows)]
 pub(crate) use tokio::runtime::Runtime;
