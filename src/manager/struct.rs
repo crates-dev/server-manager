@@ -1,8 +1,6 @@
 use crate::*;
 
 /// Main structure for managing server processes.
-///
-/// Encapsulates all server management operations and holds necessary configuration.
 #[derive(Clone)]
 pub struct ServerManager {
     /// Path to the PID file for process tracking.

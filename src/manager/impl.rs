@@ -1,6 +1,8 @@
 use crate::*;
 
+/// Provides a default implementation for `ServerManager`.
 impl Default for ServerManager {
+    /// Creates a default `ServerManager` instance with empty hooks and no PID file configured.
     fn default() -> Self {
         let empty_hook: Hook = Arc::new(|| Box::pin(async {}));
         Self {
@@ -16,15 +18,28 @@ impl Default for ServerManager {
 ///
 /// Provides methods for starting, stopping and managing server processes.
 impl ServerManager {
+    /// Creates a new `ServerManager` instance.
+    ///
+    /// This is a convenience method that calls `ServerManager::default()`.
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Sets the path to the PID file.
+    ///
+    /// # Arguments
+    ///
+    /// - `pid_file` - A string or any type that can be converted to a string representing the PID file path.
     pub fn set_pid_file<P: ToString>(&mut self, pid_file: P) -> &mut Self {
         self.pid_file = pid_file.to_string();
         self
     }
 
+    /// Sets the asynchronous function to be called before the server starts.
+    ///
+    /// # Arguments
+    ///
+    /// - `f` - An asynchronous function or closure to be executed.
     pub fn set_start_hook<F, Fut>(&mut self, f: F) -> &mut Self
     where
         F: Fn() -> Fut + Send + Sync + 'static,
@@ -34,6 +49,11 @@ impl ServerManager {
         self
     }
 
+    /// Sets the main server function to be executed.
+    ///
+    /// # Arguments
+    ///
+    /// - `f` - The primary asynchronous function or closure for the server's logic.
     pub fn set_server_hook<F, Fut>(&mut self, f: F) -> &mut Self
     where
         F: Fn() -> Fut + Send + Sync + 'static,
@@ -43,6 +63,11 @@ impl ServerManager {
         self
     }
 
+    /// Sets the asynchronous function to be called before the server stops.
+    ///
+    /// # Arguments
+    ///
+    /// - `f` - An asynchronous function or closure to be executed for cleanup.
     pub fn set_stop_hook<F, Fut>(&mut self, f: F) -> &mut Self
     where
         F: Fn() -> Fut + Send + Sync + 'static,
@@ -52,18 +77,22 @@ impl ServerManager {
         self
     }
 
+    /// Gets the configured PID file path.
     pub fn get_pid_file(&self) -> &str {
         &self.pid_file
     }
 
+    /// Gets a reference to the start hook.
     pub fn get_start_hook(&self) -> &Hook {
         &self.start_hook
     }
 
+    /// Gets a reference to the server hook.
     pub fn get_server_hook(&self) -> &Hook {
         &self.server_hook
     }
 
+    /// Gets a reference to the stop hook.
     pub fn get_stop_hook(&self) -> &Hook {
         &self.stop_hook
     }
@@ -170,7 +199,7 @@ impl ServerManager {
     ///
     /// # Arguments
     ///
-    /// - `i32` - Process ID to terminate.
+    /// - `pid` - The ID of the process to terminate.
     ///
     /// # Returns
     ///
@@ -197,7 +226,7 @@ impl ServerManager {
     ///
     /// # Arguments
     ///
-    /// - `i32` - Process ID to terminate.
+    /// - `pid` - The ID of the process to terminate.
     ///
     /// # Returns
     ///
@@ -256,8 +285,8 @@ impl ServerManager {
     ///
     /// # Arguments
     ///
-    /// - `&[&str]` - Arguments for cargo-watch.
-    /// - `bool` - Whether to wait for process completion.
+    /// - `run_args` - A slice of string arguments to pass to `cargo-watch`.
+    /// - `wait` - A boolean indicating whether to wait for the `cargo-watch` process to complete.
     ///
     /// # Returns
     ///
@@ -299,29 +328,33 @@ impl ServerManager {
         exit(0);
     }
 
-    /// Starts the server with hot-reloading using cargo-watch.
+    /// Starts the server with hot-reloading using `cargo-watch` in detached mode.
+    ///
+    /// This function spawns `cargo-watch` and returns immediately.
     ///
     /// # Arguments
     ///
-    /// - `&[&str]` - Arguments for cargo-watch.
+    /// - `run_args` - A slice of string arguments to pass to `cargo-watch`.
     ///
     /// # Returns
     ///
     /// - `ServerManagerResult` - Operation result.
-    pub async fn hot_restart(&self, run_args: &[&str]) -> ServerManagerResult {
+    pub async fn watch_detached(&self, run_args: &[&str]) -> ServerManagerResult {
         self.run_with_cargo_watch(run_args, false).await
     }
 
-    /// Starts the server with hot-reloading and waits for completion.
+    /// Starts the server with hot-reloading using `cargo-watch` and waits for it to complete.
+    ///
+    /// This function is blocking and will wait for the `cargo-watch` process to exit.
     ///
     /// # Arguments
     ///
-    /// - `&[&str]` - Arguments for cargo-watch.
+    /// - `run_args` - A slice of string arguments to pass to `cargo-watch`.
     ///
     /// # Returns
     ///
     /// - `ServerManagerResult` - Operation result.
-    pub async fn hot_restart_wait(&self, run_args: &[&str]) -> ServerManagerResult {
+    pub async fn watch(&self, run_args: &[&str]) -> ServerManagerResult {
         self.run_with_cargo_watch(run_args, true).await
     }
 }
