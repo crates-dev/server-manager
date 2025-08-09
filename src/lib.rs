@@ -9,10 +9,8 @@
 //! it enables background daemon processes.
 
 pub(crate) mod cfg;
-pub mod config;
 pub(crate) mod manager;
 
-pub use config::*;
 pub use manager::{r#struct::*, r#type::*};
 
 pub(crate) use manager::r#const::*;

@@ -4,9 +4,13 @@ use crate::*;
 ///
 /// Encapsulates all server management operations and holds necessary configuration.
 #[derive(Clone)]
-pub struct ServerManager<F> {
-    /// Configuration parameters for server management.
-    pub(crate) config: ServerManagerConfig,
+pub struct ServerManager {
+    /// Path to the PID file for process tracking.
+    pub(crate) pid_file: String,
+    /// An asynchronous function to be called before stopping the server.
+    pub(crate) stop_hook: Hook,
+    /// An asynchronous function to be called before starting the server.
+    pub(crate) start_hook: Hook,
     /// Server function to be executed.
-    pub(crate) server_fn: F,
+    pub(crate) server_hook: Hook,
 }

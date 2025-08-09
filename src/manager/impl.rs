@@ -1,36 +1,83 @@
 use crate::*;
 
+impl Default for ServerManager {
+    fn default() -> Self {
+        let empty_hook: Hook = Arc::new(|| Box::pin(async {}));
+        Self {
+            pid_file: Default::default(),
+            stop_hook: empty_hook.clone(),
+            server_hook: empty_hook.clone(),
+            start_hook: empty_hook,
+        }
+    }
+}
+
 /// Implementation of server management operations.
 ///
 /// Provides methods for starting, stopping and managing server processes.
-impl<F, Fut> ServerManager<F>
-where
-    F: Fn() -> Fut,
-    Fut: std::future::Future<Output = ()>,
-{
-    /// Creates a new ServerManager instance.
-    ///
-    /// # Arguments
-    ///
-    /// - `ServerManagerConfig` - Server configuration parameters.
-    /// - `F` - Asynchronous server function.
-    ///
-    /// # Returns
-    ///
-    /// - `ServerManager<F>` - New server manager instance.
-    pub fn new(config: ServerManagerConfig, server_fn: F) -> Self {
-        Self { config, server_fn }
+impl ServerManager {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn set_pid_file<P: ToString>(&mut self, pid_file: P) -> &mut Self {
+        self.pid_file = pid_file.to_string();
+        self
+    }
+
+    pub fn set_start_hook<F, Fut>(&mut self, f: F) -> &mut Self
+    where
+        F: Fn() -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = ()> + Send + 'static,
+    {
+        self.start_hook = Arc::new(move || Box::pin(f()));
+        self
+    }
+
+    pub fn set_server_hook<F, Fut>(&mut self, f: F) -> &mut Self
+    where
+        F: Fn() -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = ()> + Send + 'static,
+    {
+        self.server_hook = Arc::new(move || Box::pin(f()));
+        self
+    }
+
+    pub fn set_stop_hook<F, Fut>(&mut self, f: F) -> &mut Self
+    where
+        F: Fn() -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = ()> + Send + 'static,
+    {
+        self.stop_hook = Arc::new(move || Box::pin(f()));
+        self
+    }
+
+    pub fn get_pid_file(&self) -> &str {
+        &self.pid_file
+    }
+
+    pub fn get_start_hook(&self) -> &Hook {
+        &self.start_hook
+    }
+
+    pub fn get_server_hook(&self) -> &Hook {
+        &self.server_hook
+    }
+
+    pub fn get_stop_hook(&self) -> &Hook {
+        &self.stop_hook
     }
 
     /// Starts the server in foreground mode.
     ///
     /// Writes the current process ID to the PID file and executes the server function.
     pub async fn start(&self) {
+        (self.start_hook)().await;
         if let Err(e) = self.write_pid_file() {
             eprintln!("Failed to write pid file: {}", e);
             return;
         }
-        (self.server_fn)().await;
+        (self.server_hook)().await;
     }
 
     /// Stops the running server process.
@@ -41,7 +88,7 @@ where
     ///
     /// - `ServerManagerResult` - Operation result.
     pub async fn stop(&self) -> ServerManagerResult {
-        (self.config.stop_hook)().await;
+        (self.stop_hook)().await;
         let pid: i32 = self.read_pid_file()?;
         self.kill_process(pid)
     }
@@ -49,12 +96,12 @@ where
     /// Starts the server in daemon (background) mode on Unix platforms.
     #[cfg(not(windows))]
     pub async fn start_daemon(&self) -> ServerManagerResult {
-        (self.config.start_hook)().await;
+        (self.start_hook)().await;
         if std::env::var(RUNNING_AS_DAEMON).is_ok() {
             self.write_pid_file()?;
             let rt: Runtime = Runtime::new()?;
             rt.block_on(async {
-                (self.server_fn)().await;
+                (self.server_hook)().await;
             });
             return Ok(());
         }
@@ -72,13 +119,13 @@ where
     /// Starts the server in daemon (background) mode on Windows platforms.
     #[cfg(windows)]
     pub async fn start_daemon(&self) -> ServerManagerResult {
-        (self.config.start_hook)().await;
+        (self.start_hook)().await;
         use std::os::windows::process::CommandExt;
         if std::env::var(RUNNING_AS_DAEMON).is_ok() {
             self.write_pid_file()?;
             let rt: Runtime = Runtime::new()?;
             rt.block_on(async {
-                (self.server_fn)().await;
+                (self.server_hook)().await;
             });
             return Ok(());
         }
@@ -100,7 +147,7 @@ where
     ///
     /// - `Result<i32, Box<dyn std::error::Error>>` - Process ID if successful.
     fn read_pid_file(&self) -> Result<i32, Box<dyn std::error::Error>> {
-        let pid_str: String = fs::read_to_string(&self.config.pid_file)?;
+        let pid_str: String = fs::read_to_string(&self.pid_file)?;
         let pid: i32 = pid_str.trim().parse::<i32>()?;
         Ok(pid)
     }
@@ -111,11 +158,11 @@ where
     ///
     /// - `ServerManagerResult` - Operation result.
     fn write_pid_file(&self) -> ServerManagerResult {
-        if let Some(parent) = Path::new(&self.config.pid_file).parent() {
+        if let Some(parent) = Path::new(&self.pid_file).parent() {
             fs::create_dir_all(parent)?;
         }
         let pid: u32 = id();
-        fs::write(&self.config.pid_file, pid.to_string())?;
+        fs::write(&self.pid_file, pid.to_string())?;
         Ok(())
     }
 
@@ -216,7 +263,7 @@ where
     ///
     /// - `ServerManagerResult` - Operation result.
     async fn run_with_cargo_watch(&self, run_args: &[&str], wait: bool) -> ServerManagerResult {
-        (self.config.start_hook)().await;
+        (self.start_hook)().await;
         let cargo_watch_installed: Output = Command::new("cargo")
             .arg("install")
             .arg("--list")
@@ -244,7 +291,6 @@ where
         let mut child: Child = command
             .spawn()
             .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
-        (self.config.stop_hook)().await;
         if wait {
             child
                 .wait()
