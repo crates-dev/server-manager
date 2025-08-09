@@ -215,7 +215,8 @@ where
     /// # Returns
     ///
     /// - `ServerManagerResult` - Operation result.
-    fn run_with_cargo_watch(&self, run_args: &[&str], wait: bool) -> ServerManagerResult {
+    async fn run_with_cargo_watch(&self, run_args: &[&str], wait: bool) -> ServerManagerResult {
+        (self.config.start_hook)().await;
         let cargo_watch_installed: Output = Command::new("cargo")
             .arg("install")
             .arg("--list")
@@ -260,8 +261,8 @@ where
     /// # Returns
     ///
     /// - `ServerManagerResult` - Operation result.
-    pub fn hot_restart(&self, run_args: &[&str]) -> ServerManagerResult {
-        self.run_with_cargo_watch(run_args, false)
+    pub async fn hot_restart(&self, run_args: &[&str]) -> ServerManagerResult {
+        self.run_with_cargo_watch(run_args, false).await
     }
 
     /// Starts the server with hot-reloading and waits for completion.
@@ -273,7 +274,7 @@ where
     /// # Returns
     ///
     /// - `ServerManagerResult` - Operation result.
-    pub fn hot_restart_wait(&self, run_args: &[&str]) -> ServerManagerResult {
-        self.run_with_cargo_watch(run_args, true)
+    pub async fn hot_restart_wait(&self, run_args: &[&str]) -> ServerManagerResult {
+        self.run_with_cargo_watch(run_args, true).await
     }
 }
