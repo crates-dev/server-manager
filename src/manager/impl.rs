@@ -244,6 +244,7 @@ where
         let mut child: Child = command
             .spawn()
             .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+        (self.config.stop_hook)().await;
         if wait {
             child
                 .wait()
