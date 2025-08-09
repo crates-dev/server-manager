@@ -7,4 +7,5 @@ pub type ServerManagerError = Box<dyn std::error::Error>;
 pub type ServerManagerResult = Result<(), ServerManagerError>;
 
 /// Type alias for the hook functions.
-pub type Hook = Arc<dyn Fn() -> Pin<Box<dyn Future<Output = ()> + Send>> + Send + Sync>;
+pub type ServerManagerHook =
+    Arc<dyn Fn() -> Pin<Box<dyn Future<Output = ()> + Send>> + Send + Sync>;

@@ -4,7 +4,7 @@ use crate::*;
 impl Default for ServerManager {
     /// Creates a default `ServerManager` instance with empty hooks and no PID file configured.
     fn default() -> Self {
-        let empty_hook: Hook = Arc::new(|| Box::pin(async {}));
+        let empty_hook: ServerManagerHook = Arc::new(|| Box::pin(async {}));
         Self {
             pid_file: Default::default(),
             stop_hook: empty_hook.clone(),
@@ -39,13 +39,13 @@ impl ServerManager {
     ///
     /// # Arguments
     ///
-    /// - `f` - An asynchronous function or closure to be executed.
-    pub fn set_start_hook<F, Fut>(&mut self, f: F) -> &mut Self
+    /// - `F` - An asynchronous function or closure to be executed.
+    pub fn set_start_hook<F, Fut>(&mut self, func: F) -> &mut Self
     where
         F: Fn() -> Fut + Send + Sync + 'static,
         Fut: Future<Output = ()> + Send + 'static,
     {
-        self.start_hook = Arc::new(move || Box::pin(f()));
+        self.start_hook = Arc::new(move || Box::pin(func()));
         self
     }
 
@@ -53,13 +53,13 @@ impl ServerManager {
     ///
     /// # Arguments
     ///
-    /// - `f` - The primary asynchronous function or closure for the server's logic.
-    pub fn set_server_hook<F, Fut>(&mut self, f: F) -> &mut Self
+    /// - `F` - The primary asynchronous function or closure for the server's logic.
+    pub fn set_server_hook<F, Fut>(&mut self, func: F) -> &mut Self
     where
         F: Fn() -> Fut + Send + Sync + 'static,
         Fut: Future<Output = ()> + Send + 'static,
     {
-        self.server_hook = Arc::new(move || Box::pin(f()));
+        self.server_hook = Arc::new(move || Box::pin(func()));
         self
     }
 
@@ -67,13 +67,13 @@ impl ServerManager {
     ///
     /// # Arguments
     ///
-    /// - `f` - An asynchronous function or closure to be executed for cleanup.
-    pub fn set_stop_hook<F, Fut>(&mut self, f: F) -> &mut Self
+    /// - `F` - An asynchronous function or closure to be executed for cleanup.
+    pub fn set_stop_hook<F, Fut>(&mut self, func: F) -> &mut Self
     where
         F: Fn() -> Fut + Send + Sync + 'static,
         Fut: Future<Output = ()> + Send + 'static,
     {
-        self.stop_hook = Arc::new(move || Box::pin(f()));
+        self.stop_hook = Arc::new(move || Box::pin(func()));
         self
     }
 
@@ -83,17 +83,17 @@ impl ServerManager {
     }
 
     /// Gets a reference to the start hook.
-    pub fn get_start_hook(&self) -> &Hook {
+    pub fn get_start_hook(&self) -> &ServerManagerHook {
         &self.start_hook
     }
 
     /// Gets a reference to the server hook.
-    pub fn get_server_hook(&self) -> &Hook {
+    pub fn get_server_hook(&self) -> &ServerManagerHook {
         &self.server_hook
     }
 
     /// Gets a reference to the stop hook.
-    pub fn get_stop_hook(&self) -> &Hook {
+    pub fn get_stop_hook(&self) -> &ServerManagerHook {
         &self.stop_hook
     }
 
