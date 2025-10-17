@@ -21,6 +21,7 @@ impl ServerManager {
     /// Creates a new `ServerManager` instance.
     ///
     /// This is a convenience method that calls `ServerManager::default()`.
+    #[inline]
     pub fn new() -> Self {
         Self::default()
     }
@@ -78,6 +79,7 @@ impl ServerManager {
     }
 
     /// Gets the configured PID file path.
+    #[inline]
     pub fn get_pid_file(&self) -> &str {
         &self.pid_file
     }
