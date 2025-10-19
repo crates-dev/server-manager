@@ -105,7 +105,7 @@ impl ServerManager {
     pub async fn start(&self) {
         (self.start_hook)().await;
         if let Err(e) = self.write_pid_file() {
-            eprintln!("Failed to write pid file: {}", e);
+            eprintln!("Failed to write pid file: {e}");
             return;
         }
         (self.server_hook)().await;
@@ -260,8 +260,7 @@ impl ServerManager {
         if process_handle.is_null() {
             let error_code = unsafe { GetLastError() };
             return Err(format!(
-                "Failed to open process with pid: {}. Error code: {}",
-                pid, error_code
+                "Failed to open process with pid: {pid}. Error code: {error_code}"
             )
             .into());
         }
@@ -272,8 +271,7 @@ impl ServerManager {
                 CloseHandle(process_handle);
             }
             return Err(format!(
-                "Failed to terminate process with pid: {}. Error code: {}",
-                pid, error_code
+                "Failed to terminate process with pid: {pid}. Error code: {error_code}"
             )
             .into());
         }
