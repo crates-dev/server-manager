@@ -236,24 +236,24 @@ impl ServerManager {
     #[cfg(windows)]
     fn kill_process(&self, pid: i32) -> ServerManagerResult {
         use std::ffi::c_void;
-        type DWORD = u32;
-        type BOOL = i32;
-        type HANDLE = *mut c_void;
-        type UINT = u32;
-        const PROCESS_TERMINATE: DWORD = 0x0001;
-        const PROCESS_ALL_ACCESS: DWORD = 0x1F0FFF;
+        type Dword = u32;
+        type Bool = i32;
+        type Handle = *mut c_void;
+        type Uint = u32;
+        const PROCESS_TERMINATE: Dword = 0x0001;
+        const PROCESS_ALL_ACCESS: Dword = 0x1F0FFF;
         unsafe extern "system" {
             fn OpenProcess(
-                dwDesiredAccess: DWORD,
-                bInheritHandle: BOOL,
-                dwProcessId: DWORD,
-            ) -> HANDLE;
-            fn TerminateProcess(hProcess: HANDLE, uExitCode: UINT) -> BOOL;
-            fn CloseHandle(hObject: HANDLE) -> BOOL;
-            fn GetLastError() -> DWORD;
+                dwDesiredAccess: Dword,
+                bInheritHandle: Bool,
+                dwProcessId: Dword,
+            ) -> Handle;
+            fn TerminateProcess(hProcess: Handle, uExitCode: Uint) -> Bool;
+            fn CloseHandle(hObject: Handle) -> Bool;
+            fn GetLastError() -> Dword;
         }
-        let process_id: DWORD = pid as DWORD;
-        let mut process_handle: HANDLE = unsafe { OpenProcess(PROCESS_TERMINATE, 0, process_id) };
+        let process_id: Dword = pid as Dword;
+        let mut process_handle: Handle = unsafe { OpenProcess(PROCESS_TERMINATE, 0, process_id) };
         if process_handle.is_null() {
             process_handle = unsafe { OpenProcess(PROCESS_ALL_ACCESS, 0, process_id) };
         }
@@ -265,7 +265,7 @@ impl ServerManager {
             )
             .into());
         }
-        let terminate_result: BOOL = unsafe { TerminateProcess(process_handle, 1) };
+        let terminate_result: Bool = unsafe { TerminateProcess(process_handle, 1) };
         if terminate_result == 0 {
             let error_code = unsafe { GetLastError() };
             unsafe {
