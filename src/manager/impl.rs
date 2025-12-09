@@ -3,6 +3,7 @@ use crate::*;
 /// Provides a default implementation for `ServerManager`.
 impl Default for ServerManager {
     /// Creates a default `ServerManager` instance with empty hooks and no PID file configured.
+    #[inline(always)]
     fn default() -> Self {
         let empty_hook: ServerManagerHook = Arc::new(|| Box::pin(async {}));
         Self {
@@ -21,7 +22,7 @@ impl ServerManager {
     /// Creates a new `ServerManager` instance.
     ///
     /// This is a convenience method that calls `ServerManager::default()`.
-    #[inline]
+    #[inline(always)]
     pub fn new() -> Self {
         Self::default()
     }
@@ -31,6 +32,7 @@ impl ServerManager {
     /// # Arguments
     ///
     /// - `pid_file` - A string or any type that can be converted to a string representing the PID file path.
+    #[inline(always)]
     pub fn set_pid_file<P: ToString>(&mut self, pid_file: P) -> &mut Self {
         self.pid_file = pid_file.to_string();
         self
@@ -41,6 +43,7 @@ impl ServerManager {
     /// # Arguments
     ///
     /// - `F` - An asynchronous function or closure to be executed.
+    #[inline(always)]
     pub fn set_start_hook<F, Fut>(&mut self, func: F) -> &mut Self
     where
         F: Fn() -> Fut + Send + Sync + 'static,
@@ -55,6 +58,7 @@ impl ServerManager {
     /// # Arguments
     ///
     /// - `F` - The primary asynchronous function or closure for the server's logic.
+    #[inline(always)]
     pub fn set_server_hook<F, Fut>(&mut self, func: F) -> &mut Self
     where
         F: Fn() -> Fut + Send + Sync + 'static,
@@ -69,6 +73,7 @@ impl ServerManager {
     /// # Arguments
     ///
     /// - `F` - An asynchronous function or closure to be executed for cleanup.
+    #[inline(always)]
     pub fn set_stop_hook<F, Fut>(&mut self, func: F) -> &mut Self
     where
         F: Fn() -> Fut + Send + Sync + 'static,
@@ -79,22 +84,25 @@ impl ServerManager {
     }
 
     /// Gets the configured PID file path.
-    #[inline]
+    #[inline(always)]
     pub fn get_pid_file(&self) -> &str {
         &self.pid_file
     }
 
     /// Gets a reference to the start hook.
+    #[inline(always)]
     pub fn get_start_hook(&self) -> &ServerManagerHook {
         &self.start_hook
     }
 
     /// Gets a reference to the server hook.
+    #[inline(always)]
     pub fn get_server_hook(&self) -> &ServerManagerHook {
         &self.server_hook
     }
 
     /// Gets a reference to the stop hook.
+    #[inline(always)]
     pub fn get_stop_hook(&self) -> &ServerManagerHook {
         &self.stop_hook
     }
