@@ -1,6 +1,6 @@
 [package]
 name = "server-manager"
-version = "5.0.4"
+version = "5.0.5"
 readme = "README.md"
 edition = "2024"
 authors = ["root@ltpp.vip"]
@@ -9,14 +9,7 @@ description = """server-manager is a rust library for managing server processes.
 keywords = ["manager", "processes", "libc", "linux", "unix"]
 repository = "https://github.com/crates-dev/server-manager.git"
 categories = ["development-tools"]
-exclude = [
-    "target",
-    "Cargo.lock",
-    "sh",
-    ".github",
-    "**/*.pid",
-    "**/*.log"
-]
+exclude = ["target", "Cargo.lock", "sh", ".github", "**/*.pid", "**/*.log"]
 
 [dependencies]
 tokio = { version = "1.48.0", features = ["full"] }
