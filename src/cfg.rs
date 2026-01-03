@@ -20,9 +20,9 @@ async fn test_start_executes_server_fn() {
             println!("Before stop hook executed");
         });
     let res: ServerManagerResult = manager.start_daemon().await;
-    println!("start_daemon {:?}", res);
+    println!("start_daemon {res:?}");
     let res: ServerManagerResult = manager.stop().await;
-    println!("stop {:?}", res);
+    println!("stop {res:?}");
     manager.start().await;
     let _ = fs::remove_file(&pid_file);
 }
