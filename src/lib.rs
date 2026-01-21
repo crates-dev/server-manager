@@ -8,19 +8,20 @@
 //! and asynchronous operations. On Unix and Windows platforms,
 //! it enables background daemon processes.
 
-pub(crate) mod r#const;
-pub(crate) mod r#impl;
-pub(crate) mod r#struct;
-pub(crate) mod r#type;
-
+mod r#const;
+mod r#impl;
+mod r#struct;
 #[cfg(test)]
 mod test;
+mod r#type;
 
 pub use {r#struct::*, r#type::*};
 
-pub(crate) use r#const::*;
+use r#const::*;
 
-pub(crate) use std::{
+#[cfg(test)]
+use std::time::Duration;
+use std::{
     fs,
     future::Future,
     path::{Path, PathBuf},
@@ -29,7 +30,4 @@ pub(crate) use std::{
     sync::Arc,
 };
 
-pub(crate) use tokio::runtime::Runtime;
-
-#[cfg(test)]
-pub(crate) use std::time::Duration;
+use tokio::runtime::Runtime;
