@@ -1,9 +1,7 @@
+use crate::*;
+
 #[tokio::test]
 async fn test_start_executes_server_fn() {
-    use crate::*;
-    use std::fs;
-    use std::time::Duration;
-
     let pid_file: String = "./process/test_pid.pid".to_string();
     let _ = fs::remove_file(&pid_file);
     let server = || async {
