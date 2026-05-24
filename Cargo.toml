@@ -1,6 +1,6 @@
 [package]
 name = "server-manager"
-version = "5.0.13"
+version = "5.0.14"
 readme = "README.md"
 edition = "2024"
 authors = ["root@ltpp.vip"]

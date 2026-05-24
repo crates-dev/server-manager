@@ -11,16 +11,12 @@
 mod r#const;
 mod r#impl;
 mod r#struct;
-#[cfg(test)]
-mod test;
 mod r#type;
 
 pub use {r#struct::*, r#type::*};
 
 use r#const::*;
 
-#[cfg(test)]
-use std::time::Duration;
 use std::{
     fs,
     future::Future,

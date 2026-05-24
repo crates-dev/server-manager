@@ -3,7 +3,7 @@ use crate::*;
 #[tokio::test]
 async fn test_start_executes_server_fn() {
     let pid_file: String = "./process/test_pid.pid".to_string();
-    let _ = fs::remove_file(&pid_file);
+    let _ = remove_file(&pid_file);
     let server = || async {
         tokio::time::sleep(Duration::from_secs(1)).await;
     };
@@ -22,5 +22,5 @@ async fn test_start_executes_server_fn() {
     let res: ServerManagerResult = manager.stop().await;
     println!("stop {res:?}");
     manager.start().await;
-    let _ = fs::remove_file(&pid_file);
+    let _ = remove_file(&pid_file);
 }
